@@ -509,7 +509,7 @@
         const fiveByFiveSynth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: "triangle" },
             envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.5 },
-            volume: -5 // Um pouco mais alto que o synth de linha
+            volume: -5 
         }).toDestination();
         
         // Função para tocar o som de limpeza de linha
@@ -519,7 +519,6 @@
 
         // Função para tocar o som de limpeza 5x5
         function playFiveByFiveSFX() {
-            // Um acorde de "vitória" (Dó Maior)
             fiveByFiveSynth.triggerAttackRelease(["C5", "E5", "G5"], "4n"); 
         }
 
@@ -529,32 +528,28 @@
             envelope: { attack: 0.02, decay: 0.5, sustain: 0.2, release: 0.5 },
         }).toDestination();
         
-        // Loop simples com notas doces e descontraídas
         const bgLoop = new Tone.Sequence((time, note) => {
             bgSynth.triggerAttackRelease(note, "4n", time);
         }, ["C4", ["E4", "D4"], "F4", ["E4", "G4"]], "4n");
         
-        bgLoop.humanize = true; // Para dar um toque mais orgânico
-        bgLoop.start(0);
-
-
-        // Função para iniciar a música de fundo e o contexto de áudio
-        function startAudio() {
-            // Inicializa o contexto de áudio do Tone.js no primeiro clique do usuário
+        bgLoop.humanize = true; 
+        
+        // 3. Funções de Controle de Áudio
+        
+        // Ativa o Contexto de Áudio e toca um bip de confirmação (Requer interação do usuário)
+        function resumeAudioContext() {
             if (Tone.context.state !== 'running') {
                 Tone.start();
             }
-            
-            // Define o BPM e inicia o loop
+            // Bip de confirmação
+            lineClearSynth.triggerAttackRelease("G4", "16n"); 
+        }
+
+        // Inicia a música de fundo
+        function startBackgroundMusic() {
             Tone.Transport.bpm.value = 120;
-            Tone.Transport.start(); 
-            
-            // Aplica o volume inicial do slider
-            const slider = document.getElementById('volume-slider');
-            if (slider) {
-                // O volume do Tone.js é em dB, o valor do slider já é em dB
-                Tone.Destination.volume.value = parseFloat(slider.value);
-            }
+            bgLoop.start(0); // Inicia o loop na posição 0
+            Tone.Transport.start(); // Inicia o transporte (o tempo do Tone.js)
         }
 
         // =======================================================
@@ -579,7 +574,8 @@
             const volumeSlider = document.getElementById('volume-slider');
             if (volumeSlider) {
                  volumeSlider.value = savedVolume;
-                 Tone.Destination.volume.value = parseFloat(savedVolume);
+                 // Aplica o volume inicial no destino principal do Tone.js
+                 Tone.Destination.volume.value = parseFloat(savedVolume); 
             }
             
             highScoreDisplay.innerText = highScore;
@@ -681,8 +677,11 @@
 
             // 7. Lógica da Tela Inicial (Inicia Jogo e Áudio)
             playBtn.onclick = () => {
-                // Inicia o contexto de áudio no clique do usuário (necessário para autoplay)
-                startAudio();
+                // PASSO CRUCIAL: Ativa o contexto de áudio no clique do usuário
+                resumeAudioContext();
+                
+                // Inicia a música de fundo
+                startBackgroundMusic();
 
                 // Captura o nome inserido
                 const name = playerNameInput.value.trim();
